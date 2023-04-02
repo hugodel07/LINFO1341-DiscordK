@@ -21,7 +21,7 @@ func getDnsData(filename string) {
 
 	packets := gopacket.NewPacketSource(handle, handle.LinkType()).Packets()
 
-	var domainNamesResolved []string
+	//var domainNamesResolved []string
 	//var ips []string
 
 	var domainNamesAndIps map[string][]string = make(map[string][]string)
@@ -69,14 +69,12 @@ func getDnsData(filename string) {
 		}
 	}
 
-	// print the domain names with 'discord' in their name
-
-	discordDomains := 0
-	for _, domain := range domainNamesResolved {
-		if strings.Contains(domain, "discord") {
-			discordDomains++
-		}
-	}
+	//discordDomains := 0
+	//for _, domain := range domainNamesResolved {
+	//	if strings.Contains(domain, "discord") {
+	//		discordDomains++
+	//	}
+	//}
 
 	fmt.Printf("\nTrace: %s ---------------------------\n", filename)
 	fmt.Println("Domain names and IPs found: ", domainNamesAndIps)
@@ -84,6 +82,47 @@ func getDnsData(filename string) {
 	//fmt.Printf("IPs found in answers (%d): %s\n", len(ips), ips)
 	//fmt.Printf("Discord domains found: %d\n", discordDomains)
 }
+
+func getIpData(filename string) {
+	handle, err := pcap.OpenOffline(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer handle.Close()
+
+	//var ips []string
+	var ipsMap map[string]int = make(map[string]int)
+
+	fmt.Printf("\nTrace: %s ---------------------------\n", filename)
+
+	packets := gopacket.NewPacketSource(handle, handle.LinkType()).Packets()
+
+	for pkt := range packets {
+		ipv4Layer := pkt.Layer(layers.LayerTypeIPv4)
+		if ipv4Layer != nil {
+
+			// get the ip layer
+			ip, _ := ipv4Layer.(*layers.IPv4)
+
+			//fmt.Println("IP: ", ip.SrcIP, " -> ", ip.DstIP)
+			//if !slices.Contains(ips, ip.SrcIP.String()) {
+			//	ips = append(ips, ip.SrcIP.String())
+			//}
+			//if !slices.Contains(ips, ip.DstIP.String()) {
+			//	ips = append(ips, ip.DstIP.String())
+			//}
+
+			// add 1 to the count of the ip in the ipsMap
+			ipsMap[ip.SrcIP.String()]++
+			ipsMap[ip.DstIP.String()]++
+		}
+	}
+	fmt.Println("IPs and their count: ", ipsMap)
+
+	//fmt.Printf("IPs found in answers (%d): %s\n", len(ips), ips)
+
+}
+
 func main() {
 	root := "../"
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
@@ -92,7 +131,8 @@ func main() {
 		}
 		// search for all .pcapng and .pcap files
 		if !info.IsDir() && (strings.HasSuffix(info.Name(), ".pcapng") || strings.HasSuffix(info.Name(), ".pcap")) {
-			getDnsData(path)
+			//getDnsData(path)
+			getIpData(path)
 		}
 		return nil
 	})
