@@ -90,6 +90,7 @@ func getIpData(filename string) {
 
 	for pkt := range packets {
 
+
 		ipv4Layer := pkt.Layer(layers.LayerTypeIPv4)
 		if ipv4Layer != nil {
 
@@ -99,6 +100,7 @@ func getIpData(filename string) {
 			// add 1 to the count of the ip in the ipsMap
 			ipsMap[ip.SrcIP.String()]++
 			ipsMap[ip.DstIP.String()]++
+
 		}
 
 	}
